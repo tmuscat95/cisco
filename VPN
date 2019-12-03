@@ -1,0 +1,35 @@
+R3(config)# crypto isakmp enable
+R3(config)# crypto isakmp policy 10
+R3(config-isakmp)# authentication pre-share
+R3(config-isakmp)# encryption 3des
+R3(config-isakmp)# hash sha
+R3(config-isakmp)# group 2
+R3(config-isakmp)# end
+	-define isakmp policy HAGLE
+
+R3(config)# crypto isakmp key SECRET-KEY address 209.165.200.226
+	-set secret key, address is interface on end point router on the other side.
+R3(config)# crypto ipsec transform-set ESP-TUNNEL  esp-3des esp-sha-hmac
+	-transform protocols to apply to traffic going through vpn tunnel
+
+R3(config)# ip access-list extended VPN-ACL
+R3(config-ext-nacl)# permit ip 172.16.3.0 0.0.0.255 192.168.1.0 0.0.0.255
+R3(config-ext-nacl)# exit
+	- define interesting traffic; ie traffic that will go through the VPN tunnel, networks are the two networks to be linked by the VPN
+
+R3(config)# crypto map S2S-MAP 10 ipsec-isakmp
+	- define crypto map, given name S2S-MAP type ipsec-isakmp
+R3(config-crypto-map)# match address VPN-ACL
+	- associate access list with crypto map
+R3(config-crypto-map)# set peer 209.165.200.226
+	- set ip of endpoint router
+R3(config-crypto-map)# set transform-set ESP-TUNNEL
+	- sassociate tunnel with crypto map
+
+R3(config)# interface e0/2
+R3(config-if)# crypto map S2S-MAP
+	- assign crypto map to tunnel
+
+
+
+
