@@ -1,0 +1,93 @@
+spanning-tree vlan 1 priority 0
+	-set priority of switch for STP
+	
+S1(config)# interface e0/1
+S1(config-if)# switchport trunk encapsulation dot1q
+S1(config-if)# switchport mode trunk
+    -set switchport to trunk mode
+
+S1(config)# interface e0/0
+S1(config-if)# switchport mode access
+		-set switchport to access mode
+
+S1(config)# interface e0/1
+S1(config-if)# switchport trunk native vlan 99
+S1(config-if)# end
+	-set native VLAN for trunk port. here setting to unused vlan
+	
+S1(config)# interface e0/1
+S1(config-if)# switchport nonegotiate
+	- turn off Cisco DTP
+
+S1(config)# interface e0/0
+S1(config-if)# spanning-tree portfast
+	- adding portfast to access ports (only use for ports connected to single hosts)
+	
+S1(config)# interface e0/2
+S1(config-if)# spanning-tree bpduguard enable
+	- adding bpduguard to block incoming bpdus on switch ports, to preven root renegotiation
+
+S2(config)# interface e0/0
+S2(config-if)# spanning-tree guard root
+	- stops switch from receiving BPDUs with higher priority on a given switchport
+
+S2(config)# spanning-tree loopguard default
+	- add loopguard
+
+S1(config-if)# switchport port-security 
+	-activate port security
+S1(config-if)# switchport port-security mac-address xxxx.xxxx.xxxx
+	- set fixed mac address on access port
+
+S2(config-if)# switchport mode access
+S2(config-if)# switchport port-security 
+S2(config-if)# switchport port-security maximum 3
+	-switchport may discover maximum of 3 MAC addresses
+S2(config-if)# switchport port-security violation shutdown
+	-if port security violated, port shuts down and must be manually reactivated
+S2(config-if)# switchport port-security aging time 120
+	-mac entries in CAM table age out after 120
+	
+S1(config)# vlan 20
+S1(config-vlan)# name Users
+	- add new vlan , number 20
+	
+S1(config)# vlan 99
+S1(config-vlan)# name newVLAN
+	- add new vlan , number 99
+
+R1(config)# interface e0/0
+R1(config-if)# shutdown
+R1(config-if)# no ip address 192.168.1.1 255.255.255.0
+R1(config-if)# no shutdown
+R1(config-if)# int e0/0.1
+R1(config-if)# encapsulation dot1q 1
+R1(config-if)# ip address 192.168.1.1 255.255.255.0
+R1(config-if)# int e0/0.20
+R1(config-if)# encapsulation dot1q 20
+R1(config-if)# ip address 192.168.20.1 255.255.255.0
+R1(config-if)# int e0/0.99
+R1(config-if)# encapsulation dot1q 99
+R1(config-if)# ip address 192.168.99.1 255.255.255.0
+	- configuring VLAN routing
+
+R1(config)# ip dhcp pool CCNAS
+R1(dhcp-config)# network 192.168.1.0 255.255.255.0
+R1(dhcp-config)# default-router 192.168.1.1
+R1(config)# ip dhcp excluded-address 192.168.1.1 192.168.1.4
+	- set up dhcp
+S1(config)# ip dhcp snooping
+	-turn on dhcp snooping
+S1(config)# ip dhcp snooping vlan 1,20
+	-turn on dhcp snooping on vlans 1 and 20
+
+S1(config)# interface e0/0
+S1(config-if)# ip dhcp snooping trust
+	- set interface as trusted
+S1(config-if)# ip dhcp snooping limit rate 10 
+	- limit dhcp requests to 10
+	
+
+
+	
+
