@@ -1,0 +1,66 @@
+R1# mkdir ipsdir
+  - create directory for signature file
+R1(config)# crypto key pubkey-chain rsa
+R1(config-pubkey-chain)# named-key realm-cisco.pub signature
+R1(config-pubkey-key)# key-string
+R1(config-pubkey)#$2A864886 F70D0101 01050003 82010F00 3082010A 02820101
+.....
+R1(config-pubkey)# quit
+	-create rsa key for verification of signature file integrity
+
+R1(config)# ip ips name iosips
+	-create ips rule
+R1(config)# ip access-list extended IPS_ACL
+R3(config-ext-nacl)# permit ip any 192.168.1.0 0.0.0.255
+R3(config-ext-nacl)# exit
+R1(config)# ip ips name ips list IPS_ACL
+	- traffic permitted by the ACL will be processed by the IPS, traffic denied by the ACL will not.
+
+R1(config)# ip http server
+R1(config)# ip ips notify sdee
+	- enable Security Device Events Exchange on router. requires HTTP server to be enabled on the device
+R1(config)# ip ips notify log
+
+R1# clock set 017:20:00 25 October 2018
+R1(config)# service timestamps log datetime msec
+	-turn on timestamps
+R1(config)# logging 192.168.1.3
+	- send logs to server on 192.168.1.3
+
+R1(config)# ip ips signature-category 
+R1(config-ips-category)# category all 
+R1(config-ips-category-action)# retired true 
+R1(config-ips-category-action)# exit
+	- retire all signature categories, compiling all of them would cause the IOS device to run out of RAM
+R1(config-ips-category)# category ios_ips basic 
+R1(config-ips-category-action)# retired false
+	-unretire signatures in the basic category
+R1(config-ips-category-action)# exit 
+R1(config-ips-category)# exit
+
+R1(config)# int g0/0 
+R1(config-if)# ip ips iosips in
+	-apply IPS rule to an interface, for traffic going IN to the interface
+	
+R1# copy tftp://192.168.1.3/IOS-S1016-CLI.pkg idconf
+	- retreiving the signature file from a tftp server on the network
+R1# show ip ips signature count
+	- show compiled signatures, to make sure signature file compiled properly
+R1# show ip ips all
+
+R1(config)# ip ips signature-definition
+R1(config-sigdef)# signature 2004 0
+R1(config-sigdef-sig)#status
+R1(config-sigdef-sig-status)# retired false 
+R1(config-sigdef-sig-status)# enabled true 
+	- unretiring an invividual signature, ICMP echo
+R1(config-sigdef-sig-status)# engine 
+R1(config-sigdef-sig-engine)# event-action produce-alert 
+	-produces an alert
+R1(config-sigdef-sig-engine)# event-action deny-packet-inline 
+	- will block the packet
+R1(config-sigdef-sig-engine)# event-action reset-tcp-connection 
+	- response to blocked packet is to reset the connection
+R1(config-sigdef-sig-engine)# exit
+R1(config-sigdef-sig)# exit
+R1(config-sigdef)# exit
