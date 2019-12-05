@@ -45,8 +45,10 @@ S2(config-if)# switchport port-security maximum 3
 	-switchport may discover maximum of 3 MAC addresses
 S2(config-if)# switchport port-security sticky
 	-port learns all mac addresses connected to it
-S2(config-if)# switchport port-security violation shutdown
+S2(config-if)# switchport port-security violation shutdown | protect | restrict
 	-if port security violated, port shuts down and must be manually reactivated
+	-restrict - if port security is violated, drop connection and send syslog message
+	-protect - ''	''	''	''	''	'' but don't send syslog message
 S2(config-if)# switchport port-security aging time 120
 	-mac entries in CAM table age out after 120
 	
