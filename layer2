@@ -43,6 +43,8 @@ S2(config-if)# switchport mode access
 S2(config-if)# switchport port-security 
 S2(config-if)# switchport port-security maximum 3
 	-switchport may discover maximum of 3 MAC addresses
+S2(config-if)# switchport port-security sticky
+	-port learns all mac addresses connected to it
 S2(config-if)# switchport port-security violation shutdown
 	-if port security violated, port shuts down and must be manually reactivated
 S2(config-if)# switchport port-security aging time 120
